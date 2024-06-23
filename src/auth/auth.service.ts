@@ -1,11 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { AuthDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { HashService } from 'src/common/services/hash.service';
 import { Jwt, JwtPayload } from './types';
+import { LoginDto, SignUpDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
 
   // Public methods
 
-  public async signUp(dto: AuthDto): Promise<Jwt> {
+  public async signUp(dto: SignUpDto): Promise<Jwt> {
     // Generate the password hash
     const hashedPassword = await this._hashService.get(dto.password);
 
@@ -27,12 +27,17 @@ export class AuthService {
       const user = await this._prismaService.user.create({
         data: {
           email: dto.email,
+          username: dto.username,
           hashedPassword,
         },
       });
 
       // Return JWT
-      return this._getTokens(user.id, user.email);
+      return this._getTokens({
+        email: user.email,
+        sub: user.id,
+        username: user.username,
+      });
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
@@ -42,12 +47,12 @@ export class AuthService {
     }
   }
 
-  public async login(dto: AuthDto): Promise<Jwt> {
+  public async login(dto: LoginDto): Promise<Jwt> {
     // Find the user by email
     try {
       const user = await this._prismaService.user.findUniqueOrThrow({
         where: {
-          email: dto.email,
+          username: dto.username,
         },
       });
       // Compare passwords
@@ -61,7 +66,11 @@ export class AuthService {
         throw new ForbiddenException('Credentials incorrect');
       }
 
-      return this._getTokens(user.id, user.email);
+      return this._getTokens({
+        email: user.email,
+        sub: user.id,
+        username: user.username,
+      });
     } catch (error) {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
@@ -96,7 +105,7 @@ export class AuthService {
         throw new ForbiddenException('Refresh token is incorrect');
       }
 
-      return this._getTokens(user.id, user.email);
+      return this._getTokens(user);
     } catch (error) {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
@@ -139,16 +148,11 @@ export class AuthService {
     });
   }
 
-  private async _getTokens(userId: number, email: string): Promise<Jwt> {
-    const payload: JwtPayload = {
-      sub: userId,
-      email,
-    };
-
+  private async _getTokens(payload: JwtPayload): Promise<Jwt> {
     const accessToken = await this._getAccessToken(payload);
     const refreshToken = await this._getRefreshToken(payload);
 
-    await this._updateRefreshToken(userId, refreshToken);
+    await this._updateRefreshToken(payload.sub, refreshToken);
 
     return {
       accessToken,

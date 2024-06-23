@@ -23,7 +23,7 @@ model User {
   // Hashed refresh token
   hashedRefreshToken String?
 
-  nickname String?
+  username String? @unique
 
   @@map("users")
 }
