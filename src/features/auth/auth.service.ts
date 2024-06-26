@@ -1,9 +1,14 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/core/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { HashService } from 'src/common/services/hash.service';
+import { HashService } from 'src/shared/services/hash.service';
 import { Jwt, JwtPayload } from './types';
 import { LoginDto, SignUpDto } from './dto';
 
@@ -41,7 +46,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
-          throw new ForbiddenException('Credentials taken');
+          throw new ConflictException('Credentials taken');
       }
       throw error;
     }
@@ -63,7 +68,7 @@ export class AuthService {
 
       // If password incorrect throw exception
       if (!passwordMatches) {
-        throw new ForbiddenException('Credentials incorrect');
+        throw new UnauthorizedException('Credentials incorrect');
       }
 
       return this._getTokens({
@@ -75,7 +80,7 @@ export class AuthService {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new ForbiddenException(error.message);
+          throw new UnauthorizedException(error.message);
         }
       }
       throw error;
@@ -92,7 +97,7 @@ export class AuthService {
         },
       });
       if (!user || !user.hashedRefreshToken)
-        throw new ForbiddenException(
+        throw new NotFoundException(
           'User is not exits or refresh token is missing',
         );
 
@@ -102,7 +107,7 @@ export class AuthService {
       );
 
       if (!refreshTokenMatches) {
-        throw new ForbiddenException('Refresh token is incorrect');
+        throw new UnauthorizedException('Refresh token is incorrect');
       }
 
       return this._getTokens(user);
@@ -110,7 +115,7 @@ export class AuthService {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
-          throw new ForbiddenException(error.message);
+          throw new NotFoundException(error.message);
         }
       }
       throw error;

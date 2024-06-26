@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
-import { AccessGuard } from './auth/guards';
+import { AuthModule } from './features/auth/auth.module';
+import { AccessGuard } from './features/auth/guards';
 import { APP_GUARD } from '@nestjs/core';
-import { PrismaModule } from './prisma/prisma.module';
-import { UsersModule } from './users/users.module';
-import { CommonModule } from './common/common.module';
+import { PrismaModule } from './core/prisma/prisma.module';
+import { UserModule } from './features/user/user.module';
 import { ConfigModule } from '@nestjs/config';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -14,8 +14,8 @@ import { ConfigModule } from '@nestjs/config';
     }),
     PrismaModule,
     AuthModule,
-    UsersModule,
-    CommonModule,
+    UserModule,
+    SharedModule,
   ],
   providers: [
     {

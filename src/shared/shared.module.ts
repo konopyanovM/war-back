@@ -6,4 +6,4 @@ import { HashService } from './services/hash.service';
   providers: [HashService],
   exports: [HashService],
 })
-export class CommonModule {}
+export class SharedModule {}
