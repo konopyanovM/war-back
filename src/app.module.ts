@@ -6,6 +6,7 @@ import { PrismaModule } from './core/prisma/prisma.module';
 import { UserModule } from './features/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { SharedModule } from './shared/shared.module';
+import { UsersModule } from './features/users/users.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SharedModule } from './shared/shared.module';
     AuthModule,
     UserModule,
     SharedModule,
+    UsersModule,
   ],
   providers: [
     {

@@ -7,10 +7,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, SignUpDto } from './dto/auth.dto';
+import { LoginDto, SignUpDto } from './dto';
 import { Jwt, UserWithRefreshToken } from './types';
 import { GetUser, Public } from './decorator';
-import { RefreshGuard } from './guards/refresh.guard';
+import { RefreshGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {

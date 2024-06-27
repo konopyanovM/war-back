@@ -17,6 +17,7 @@ model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  isActive  Boolean? @default(true)
 
   email              String  @unique
   hashedPassword     String
@@ -25,5 +26,25 @@ model User {
 
   username String? @unique
 
+  relationships Relationship[]
+
   @@map("users")
+}
+
+model Relationship {
+  userId        Int
+  relatedUserId Int
+  type          RelationshipType
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, relatedUserId])
+  @@unique([userId, relatedUserId])
+  @@map("relationships")
+}
+
+enum RelationshipType {
+  PENDING
+  FRIEND
+  BLOCK
 }

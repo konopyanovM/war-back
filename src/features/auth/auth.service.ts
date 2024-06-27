@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { HashService } from 'src/shared/services/hash.service';
 import { Jwt, JwtPayload } from './types';
 import { LoginDto, SignUpDto } from './dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +30,7 @@ export class AuthService {
 
     // Save the user in the db
     try {
-      const user = await this._prismaService.user.create({
+      const user: User = await this._prismaService.user.create({
         data: {
           email: dto.email,
           username: dto.username,
