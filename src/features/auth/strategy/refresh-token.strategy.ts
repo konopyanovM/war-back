@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/core/prisma/prisma.service';
+import { PrismaService } from 'src/core/services/prisma/prisma.service';
 import { JwtPayload, UserWithRefreshToken } from '../types';
 import { Request } from 'express';
 import { Injectable } from '@nestjs/common';

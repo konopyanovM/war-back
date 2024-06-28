@@ -26,7 +26,8 @@ model User {
 
   username String? @unique
 
-  relationships Relationship[]
+  relationships        Relationship[] @relation("UserRelationships")
+  relatedRelationships Relationship[] @relation("RelatedUserRelationships")
 
   @@map("users")
 }
@@ -34,17 +35,19 @@ model User {
 model Relationship {
   userId        Int
   relatedUserId Int
-  type          RelationshipType
+  type          RelationshipEnum
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserRelationships")
+  relatedUser User @relation(fields: [relatedUserId], references: [id], onDelete: Cascade, name: "RelatedUserRelationships")
 
   @@id([userId, relatedUserId])
   @@unique([userId, relatedUserId])
   @@map("relationships")
 }
 
-enum RelationshipType {
+enum RelationshipEnum {
   PENDING
+  REJECT
   FRIEND
   BLOCK
 }

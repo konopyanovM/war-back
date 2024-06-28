@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from './features/auth/auth.module';
 import { AccessGuard } from './features/auth/guards';
 import { APP_GUARD } from '@nestjs/core';
-import { PrismaModule } from './core/prisma/prisma.module';
+import { PrismaModule } from './core/services/prisma/prisma.module';
 import { UserModule } from './features/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { SharedModule } from './shared/shared.module';

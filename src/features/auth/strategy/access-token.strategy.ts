@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/core/prisma/prisma.service';
+import { PrismaService } from 'src/core/services/prisma/prisma.service';
 import { User } from '@prisma/client';
 import { JwtPayload } from '../types';
 
@@ -24,6 +24,8 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
         id: payload.sub,
       },
     });
+
+    if (user === null) throw new NotFoundException('User does not exist');
 
     delete user.hashedPassword;
     return user;

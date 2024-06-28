@@ -4,11 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/core/prisma/prisma.service';
+import { PrismaService } from 'src/core/services/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { HashService } from 'src/shared/services/hash.service';
+import { HashService } from 'src/core/services/hash/hash.service';
 import { Jwt, JwtPayload } from './types';
 import { LoginDto, SignUpDto } from './dto';
 import { User } from '@prisma/client';
@@ -39,11 +39,7 @@ export class AuthService {
       });
 
       // Return JWT
-      return this._getTokens({
-        email: user.email,
-        sub: user.id,
-        username: user.username,
-      });
+      return this._getTokens(this._getJwtPayload(user));
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002')
@@ -72,11 +68,7 @@ export class AuthService {
         throw new UnauthorizedException('Credentials incorrect');
       }
 
-      return this._getTokens({
-        email: user.email,
-        sub: user.id,
-        username: user.username,
-      });
+      return this._getTokens(this._getJwtPayload(user));
     } catch (error) {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
@@ -89,7 +81,7 @@ export class AuthService {
   }
 
   public async refresh(userId: number, refreshToken: string) {
-    let user;
+    let user: User;
 
     try {
       user = await this._prismaService.user.findUniqueOrThrow({
@@ -111,7 +103,7 @@ export class AuthService {
         throw new UnauthorizedException('Refresh token is incorrect');
       }
 
-      return this._getTokens(user);
+      return this._getTokens(this._getJwtPayload(user));
     } catch (error) {
       // If the user does not exist throws an exception
       if (error instanceof PrismaClientKnownRequestError) {
@@ -182,5 +174,13 @@ export class AuthService {
       expiresIn: '7w',
       secret,
     });
+  }
+
+  private _getJwtPayload(user: User): JwtPayload {
+    return {
+      email: user.email,
+      sub: user.id,
+      username: user.username,
+    };
   }
 }
