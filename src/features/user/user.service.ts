@@ -11,6 +11,21 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 export class UserService {
   constructor(private readonly _prismaService: PrismaService) {}
 
+  public async getUser(userId: number) {
+    try {
+      const user = await this._prismaService.user.findUniqueOrThrow({
+        where: {
+          id: userId,
+        },
+      });
+
+      delete user.hashedPassword;
+      delete user.hashedRefreshToken;
+
+      return user;
+    } catch (error) {}
+  }
+
   public async updateUser(userId: number, data: Partial<User>) {
     try {
       return await this._prismaService.user.update({

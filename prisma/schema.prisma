@@ -25,9 +25,13 @@ model User {
   hashedRefreshToken String?
 
   username String? @unique
+  elo      Int?    @default(400)
 
   relationships        Relationship[] @relation("UserRelationships")
   relatedRelationships Relationship[] @relation("RelatedUserRelationships")
+
+  westPlayer GameSession[] @relation("WestPlayer")
+  eastPlayer GameSession[] @relation("EastPlayer")
 
   @@map("users")
 }
@@ -50,4 +54,21 @@ enum RelationshipEnum {
   REJECT
   FRIEND
   BLOCK
+}
+
+model GameSession {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  westPlayerId Int
+  eastPlayerId Int
+
+  westPlayer User @relation(fields: [westPlayerId], references: [id], onDelete: Cascade, name: "WestPlayer")
+  eastPlayer User @relation(fields: [eastPlayerId], references: [id], onDelete: Cascade, name: "EastPlayer")
+
+  // Team enum
+  winnerId   Int?
+  winnerTeam Int?
 }

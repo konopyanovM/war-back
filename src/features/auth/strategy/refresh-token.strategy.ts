@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from 'src/core/services/prisma/prisma.service';
 import { JwtPayload, UserWithRefreshToken } from '../types';
 import { Request } from 'express';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -31,6 +31,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
         id: payload.sub,
       },
     });
+
+    if (user === null) throw new NotFoundException('User does not exist');
 
     delete user.hashedPassword;
 

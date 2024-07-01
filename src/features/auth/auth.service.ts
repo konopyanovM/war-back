@@ -91,7 +91,7 @@ export class AuthService {
       });
       if (!user || !user.hashedRefreshToken)
         throw new NotFoundException(
-          'User is not exits or refresh token is missing',
+          'User does not exist or refresh token is missing',
         );
 
       const refreshTokenMatches = this._hashService.verify(

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class AccessGuard extends AuthGuard('jwt') {
-  constructor(private _reflector: Reflector) {
+  constructor(private readonly _reflector: Reflector) {
     super();
   }
 

@@ -20,7 +20,7 @@ export class UserController {
 
   @Get('')
   public getCurrentUser(@GetUser() user: User) {
-    return user;
+    return this._userService.getUser(user.id);
   }
 
   @Patch('')
