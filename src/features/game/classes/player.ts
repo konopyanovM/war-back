@@ -1,3 +1,6 @@
+import { Team } from '../../../core/types';
+import { PlayerParameters } from '../types';
+
 export class Player {
   public id: number;
   public clientId: string;
@@ -5,7 +8,9 @@ export class Player {
 
   public gold: number = 500;
 
-  constructor(id: number, clientId: string, username: string) {
+  public team: Team;
+
+  constructor({ id, clientId, username }: PlayerParameters) {
     this.id = id;
     this.clientId = clientId;
     this.username = username;

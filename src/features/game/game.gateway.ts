@@ -11,8 +11,8 @@ import { getUserFromSocket } from '../../core/helpers';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Team } from '../../core/types';
-import { WebsocketService } from './websocket.service';
-import { Player } from './classes';
+import { GameService } from './game.service';
+import { Game, Player } from './classes';
 import { GameSession } from '@prisma/client';
 import {
   GameActionPayload,
@@ -22,13 +22,13 @@ import {
 } from './types';
 
 @WebSocketGateway({ cors: true })
-export class WebsocketGateway
+export class GameGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
     private _jwtService: JwtService,
     private _configService: ConfigService,
-    private _websocketService: WebsocketService,
+    private _websocketService: GameService,
   ) {}
 
   @WebSocketServer()
@@ -36,12 +36,16 @@ export class WebsocketGateway
 
   private _matchmakingQueue = new Map<string, Player>();
   private _sockets = new Map<string, Socket>();
-  private _games = new Map<string, GameSession>();
+  private _games = new Map<string, Game>();
 
   @SubscribeMessage('matchmaking')
   public async matchmaking(client: Socket, payload: MatchmakingPayload) {
     const user = this._getUserFromSocket(client);
-    const player: Player = new Player(user.sub, client.id, user.username);
+    const player: Player = new Player({
+      id: user.sub,
+      clientId: client.id,
+      username: user.username,
+    });
 
     switch (payload.status) {
       case MatchmakingStatus.Joined:
@@ -72,13 +76,12 @@ export class WebsocketGateway
 
   @SubscribeMessage('gameAction')
   gameAction(client: Socket, payload: GameActionPayload) {
-    const gameSession = this._games.get(payload.gameId);
+    const game = this._games.get(payload.gameId);
     const user = this._getUserFromSocket(client);
 
-    if (gameSession) {
-      const team =
-        gameSession.westPlayerId === user.sub ? Team.West : Team.East;
-      this._server.to(gameSession.id).emit('gameActionUpdate', {
+    if (game) {
+      const team = game.westPlayer.id === user.sub ? Team.West : Team.East;
+      this._server.to(game.id).emit('gameActionUpdate', {
         type: payload.type,
         team,
         data: payload.data,
@@ -88,18 +91,18 @@ export class WebsocketGateway
 
   @SubscribeMessage('gameState')
   gameState(client: Socket, payload: GameStatePayload) {
-    const gameSession: GameSession = this._games.get(payload.gameId);
+    const game: Game = this._games.get(payload.gameId);
     if (payload.team === Team.West) {
       this._websocketService
         .updateGameSession(payload.gameId, payload.team)
         .then(() => {
-          this._server.to(gameSession.id).emit('gameStateUpdate', gameSession);
+          this._server.to(game.id).emit('gameStateUpdate', game);
         });
     } else if (payload.team === Team.East) {
       this._websocketService
         .updateGameSession(payload.gameId, payload.team)
         .then(() => {
-          this._server.to(gameSession.id).emit('gameStateUpdate', gameSession);
+          this._server.to(game.id).emit('gameStateUpdate', game);
         });
     }
   }
@@ -113,27 +116,36 @@ export class WebsocketGateway
       const firstKey = keys.next().value;
       const secondKey = keys.next().value;
 
-      const player1: Player = this._matchmakingQueue.get(firstKey);
-      const player2: Player = this._matchmakingQueue.get(secondKey);
+      const westPlayer: Player = this._matchmakingQueue.get(firstKey);
+      const eastPlayer: Player = this._matchmakingQueue.get(secondKey);
+
+      westPlayer.team = Team.West;
+      eastPlayer.team = Team.East;
 
       this._server
-        .to(player1.clientId)
+        .to(westPlayer.clientId)
         .emit('matchmakingUpdate', { status: MatchmakingStatus.Found });
       this._server
-        .to(player2.clientId)
+        .to(eastPlayer.clientId)
         .emit('matchmakingUpdate', { status: MatchmakingStatus.Found });
 
       this._websocketService
-        .createGameSession(player1.id, player2.id)
+        .createGameSession(westPlayer.id, eastPlayer.id)
         .then((gameSession: GameSession) => {
           this._matchmakingQueue.delete(firstKey);
           this._matchmakingQueue.delete(secondKey);
 
-          this._sockets.get(player1.clientId).join(gameSession.id);
-          this._sockets.get(player2.clientId).join(gameSession.id);
+          this._sockets.get(westPlayer.clientId).join(gameSession.id);
+          this._sockets.get(eastPlayer.clientId).join(gameSession.id);
 
-          this._games.set(gameSession.id, gameSession);
-          this._server.to(gameSession.id).emit('gameStateUpdate', gameSession);
+          const game = new Game({
+            id: gameSession.id,
+            westPlayer: westPlayer,
+            eastPlayer: eastPlayer,
+          });
+
+          this._games.set(gameSession.id, game);
+          this._server.to(gameSession.id).emit('gameStateUpdate', game);
         });
     }
   }

@@ -7,7 +7,7 @@ import { UserModule } from './features/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { SharedModule } from './shared/shared.module';
 import { UsersModule } from './features/users/users.module';
-import { WebsocketModule } from './features/websocket/websocket.module';
+import { GameModule } from './features/game/game.module';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { WebsocketModule } from './features/websocket/websocket.module';
     UserModule,
     SharedModule,
     UsersModule,
-    WebsocketModule,
+    GameModule,
   ],
   providers: [
     {

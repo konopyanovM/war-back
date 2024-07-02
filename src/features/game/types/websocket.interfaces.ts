@@ -1,5 +1,6 @@
 import { GameActionType, MatchmakingStatus } from './enums';
 import { Team } from '../../../core/types';
+import { Player } from '../classes';
 
 export interface MatchmakingPayload {
   userId: number;
@@ -17,4 +18,16 @@ export interface GameActionPayload {
 export interface GameStatePayload {
   gameId: string;
   team: Team;
+}
+
+export interface GameParameters {
+  id: string;
+  westPlayer: Player;
+  eastPlayer: Player;
+}
+
+export interface PlayerParameters {
+  id: number;
+  clientId: string;
+  username: string;
 }

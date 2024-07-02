@@ -3,9 +3,10 @@ import { PrismaService } from '../../core/services/prisma/prisma.service';
 import { Team } from '../../core/types';
 
 @Injectable()
-export class WebsocketService {
+export class GameService {
   constructor(private _prismaService: PrismaService) {}
 
+  // Game session
   public async createGameSession(westPlayerId: number, eastPlayerId: number) {
     try {
       return await this._prismaService.gameSession.create({
